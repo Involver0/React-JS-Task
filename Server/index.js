@@ -3,9 +3,14 @@
 const express = require('express');
 const mysql = require('mysql2');
 const joi = require('joi');
+const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
+const cors = require('cors');
+const { authenticate } = require('./middleware');
+
 const server = express();
 server.use(express.json());
+server.use(cors());
 
 /////////////////////////////// Config ////////////////////////////
 
@@ -30,9 +35,9 @@ const userLoginSchema = joi.object({
 
 /////////////////////////////// Test ////////////////////////////
 
-server.get('/', (req, res) => {
+server.get('/', authenticate, (req, res) => {
   console.log(req.user);
-  res.status(200).send({ message: 'Server is connected with database' });
+  res.status(200).send({ message: 'Success' });
 });
 /////////////////////////////// Login ////////////////////////////
 server.post('/login', async (req, res) => {
@@ -57,7 +62,11 @@ server.post('/login', async (req, res) => {
       data[0].password
     );
     if (isPasswordMatching) {
-      return res.status(200).send('success');
+      const token = jwt.sign(
+        { email: data[0].email, id: data[0].id },
+        'abc123'
+      );
+      return res.status(200).send({ token });
     }
 
     return res.status(400).send({ error: 'Email or password did not match' });
@@ -106,47 +115,36 @@ server.get('/attendees', async (_, res) => {
   }
 });
 /////////////////////////////// Attendee post ////////////////////////////
-server.post('/attendees', async (req, res) => {
+server.post('/attendees', authenticate, async (req, res) => {
   try {
-    if (!req.body.email) {
-      return res.status(400).json({
-        status: 400,
-        error: 'You must provide email',
-      });
-    }
-
+    const authUser = req.user.id;
+    console.log(authUser);
     const payload = {
       first_name: req.body.first_name,
       last_name: req.body.last_name,
       email: req.body.email,
       age: req.body.age,
-      Organizers_id: 1, // Replace 1 with the appropriate 'Organizers_id' value
+      Organizers_id: authUser,
     };
 
     const response = await dbPool.query('INSERT INTO attendees SET ?', payload);
     res.status(201).json(response);
   } catch (err) {
     console.log(err);
-    return res.status(500).end();
+    return res.status(500).send({ error: 'Internal server error' });
   }
 });
 /////////////////////////////// Attendee put ////////////////////////////
-server.put('/attendees/:id', async (req, res) => {
+server.put('/attendees/:id', authenticate, async (req, res) => {
   try {
     const attendeeId = req.params.id;
-    if (!req.body.email) {
-      return res.status(400).json({
-        status: 400,
-        error: 'You must provide email',
-      });
-    }
-
+    const authUser = req.user.id;
     const payload = {
       first_name: req.body.first_name,
       last_name: req.body.last_name,
       email: req.body.email,
       age: req.body.age,
-      Organizers_id: 1,
+      Organizers_id: authUser,
     };
     const [response] = await dbPool.execute(
       'UPDATE attendees SET email = ?, first_name = ?, last_name = ?, age = ? WHERE id = ?',
@@ -169,11 +167,11 @@ server.put('/attendees/:id', async (req, res) => {
     res.status(200).json(response);
   } catch (err) {
     console.error(err);
-    return res.status(500).end();
+    return res.status(500).send(req.user);
   }
 });
 /////////////////////////////// Attendee delete ////////////////////////////
-server.delete('/attendees/:id', async (req, res) => {
+server.delete('/attendees/:id', authenticate, async (req, res) => {
   try {
     const attendeeId = req.params.id;
 
