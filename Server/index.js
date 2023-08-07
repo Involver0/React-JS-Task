@@ -2,7 +2,8 @@
 
 const express = require('express');
 const mysql = require('mysql2');
-
+const joi = require('joi');
+const bcrypt = require('bcrypt');
 const server = express();
 server.use(express.json());
 
@@ -14,8 +15,18 @@ const mysqlConfig = {
   password: 'admin',
   database: 'eventsdb',
 };
-
 const dbPool = mysql.createPool(mysqlConfig).promise();
+/////////////////////////////// Schemas ////////////////////////////
+const userSchema = joi.object({
+  name: joi.string().trim().required(),
+  email: joi.string().email().trim().lowercase().required(),
+  password: joi.string().required(),
+});
+
+const userLoginSchema = joi.object({
+  email: joi.string().email().trim().lowercase().required(),
+  password: joi.string().required(),
+});
 
 /////////////////////////////// Test ////////////////////////////
 
@@ -23,16 +34,58 @@ server.get('/', (req, res) => {
   console.log(req.user);
   res.status(200).send({ message: 'Server is connected with database' });
 });
+/////////////////////////////// Login ////////////////////////////
+server.post('/login', async (req, res) => {
+  let payload = req.body;
+  try {
+    payload = await userLoginSchema.validateAsync(payload);
+  } catch (err) {
+    console.log(err);
+    return res.status(400).send({ error: 'All fields required' });
+  }
+  try {
+    const [data] = await dbPool.execute(
+      `SELECT * FROM organizers WHERE email = ?`,
+      [payload.email]
+    );
 
+    if (!data.length) {
+      return res.status(400).send({ error: 'Email or password did not match' });
+    }
+    const isPasswordMatching = await bcrypt.compare(
+      payload.password,
+      data[0].password
+    );
+    if (isPasswordMatching) {
+      return res.status(200).send('success');
+    }
+
+    return res.status(400).send({ error: 'Email or password did not match' });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).send({ error: 'Server Error' });
+  }
+});
 /////////////////////////////// Register ////////////////////////////
 
 server.post('/register', async (req, res) => {
   let payload = req.body;
+
   try {
+    payload = await userSchema.validateAsync(payload);
+  } catch (err) {
+    console.error(err);
+    return res.status(400).send({ error: 'All fields are required' });
+  }
+
+  try {
+    // Encrypt the password
+    const encryptedPassword = await bcrypt.hash(payload.password, 10);
+    // Insert the user into the database
     const [response] = await dbPool.execute(
       `INSERT INTO organizers (name, email, password)
         VALUES (?, ?, ?)`,
-      [payload.name, payload.email, payload.password]
+      [payload.name, payload.email, encryptedPassword]
     );
     console.log([response]);
     res.status(201).send({ success: 'user is created' });
