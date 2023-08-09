@@ -11,3 +11,7 @@ export const StyledButtonWrapper = styled.div`
   justify-content: center;
   padding: 1rem;
 `;
+
+export const StyledCards = styled.div`
+  display: flex;
+`;
