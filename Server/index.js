@@ -115,16 +115,16 @@ server.get('/attendees', async (_, res) => {
   }
 });
 /////////////////////////////// Attendee post ////////////////////////////
-server.post('/attendees', authenticate, async (req, res) => {
+server.post('/attendees', async (req, res) => {
   try {
-    const authUser = req.user.id;
+    const authUser = req.user?.id;
     console.log(authUser);
     const payload = {
       first_name: req.body.first_name,
       last_name: req.body.last_name,
       email: req.body.email,
       age: req.body.age,
-      Organizers_id: authUser,
+      Organizers_id: 5, //turi buti authUser, automatiniam
     };
 
     const response = await dbPool.query('INSERT INTO attendees SET ?', payload);
@@ -135,16 +135,16 @@ server.post('/attendees', authenticate, async (req, res) => {
   }
 });
 /////////////////////////////// Attendee put ////////////////////////////
-server.put('/attendees/:id', authenticate, async (req, res) => {
+server.put('/attendees/:id', async (req, res) => {
   try {
     const attendeeId = req.params.id;
-    const authUser = req.user.id;
+    const authUser = req.user?.id;
     const payload = {
       first_name: req.body.first_name,
       last_name: req.body.last_name,
       email: req.body.email,
       age: req.body.age,
-      Organizers_id: authUser,
+      Organizers_id: 5, //turi buti authUser, automatiniam
     };
     const [response] = await dbPool.execute(
       'UPDATE attendees SET email = ?, first_name = ?, last_name = ?, age = ? WHERE id = ?',
@@ -171,7 +171,7 @@ server.put('/attendees/:id', authenticate, async (req, res) => {
   }
 });
 /////////////////////////////// Attendee delete ////////////////////////////
-server.delete('/attendees/:id', authenticate, async (req, res) => {
+server.delete('/attendees/:id', async (req, res) => {
   try {
     const attendeeId = req.params.id;
 

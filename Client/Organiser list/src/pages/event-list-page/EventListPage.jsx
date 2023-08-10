@@ -1,99 +1,67 @@
-import {
-  Button,
-  Card,
-  CardContent,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  Typography,
-} from '@mui/material';
-import {
-  StyledButtonWrapper,
-  StyledWrapperDiv,
-  StyledCards,
-} from './EventListPage.styled';
-import { useLocation } from 'react-router-dom';
-import { useState, useEffect } from 'react';
-import { fetchAttendees } from '../../api';
-import PageHeader from '../../components/page-header/PageHeader';
+import React, { useState, useEffect } from 'react';
+import { Button, Card, CardContent, Typography } from '@mui/material';
+import { StyledCardsWrapper } from './EventListPage.styled';
+import { deleteAttendee, fetchAttendees } from '../../api';
+import AddAttendeeDialog from '../../components/add-attendee-dialog/AddAttendeeDialog';
 
 const EventListPage = () => {
   const [attendeeList, setAttendeeList] = useState([]);
-  const [isLoading, setisLoading] = useState(false);
-
-  const [isDialogOpen, setisDialogOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   const fetchAttendeeList = async () => {
     try {
-      setisLoading(true);
+      setIsLoading(true);
       const { data } = await fetchAttendees();
       setAttendeeList(data);
     } catch (err) {
       console.log(err);
     } finally {
-      setisLoading(false);
+      setIsLoading(false);
     }
   };
+
   useEffect(() => {
     fetchAttendeeList();
   }, []);
 
-  const onDialogClose = () => setisDialogOpen(false);
+  const handleDeleteAttendee = async (id) => {
+    try {
+      const response = await deleteAttendee(id);
+      console.log(response);
+      // Update the attendeeList after successful deletion
+      setAttendeeList(attendeeList.filter((attendee) => attendee.id !== id));
+    } catch (err) {
+      console.log(err);
+    }
+  };
 
   return (
     <>
-      <PageHeader title='Attendee List'>
-        <Button
-          variant='contained'
-          size='small'
-          onClick={() => setisDialogOpen(true)}
-        >
-          Add attendee
-        </Button>
-      </PageHeader>
-      <StyledCards>
+      <AddAttendeeDialog onSave={(body) => console.log(body)} />
+      <StyledCardsWrapper>
         <Typography variant='h3' align='center'>
           {isLoading && 'isLoading'}
         </Typography>
-        <div>
-          {attendeeList.map((attendee) => (
-            <Card key={attendee.id} style={{ margin: '1rem' }}>
-              <CardContent style={{ textAlign: 'center' }}>
-                <Typography variant='h5'>
-                  {attendee.first_name} {attendee.last_name}
-                </Typography>
-                <Typography variant='body1' textAlign={'center'}>
-                  {attendee.email}
-                </Typography>
-                <Typography variant='body1' textAlign={'center'}>
-                  {attendee.age}
-                </Typography>
-                <Button variant='contained' size='small' textAlign={'center'}>
-                  delete attendee
-                </Button>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      </StyledCards>
-      <Dialog
-        open={isDialogOpen}
-        maxWidth='sm'
-        fullWidth
-        onClose={onDialogClose}
-      >
-        <DialogTitle>Add atendee</DialogTitle>
-        <DialogContent></DialogContent>
-        <DialogActions>
-          <Button variant='outlined' size='small' onClick={onDialogClose}>
-            Cancel
-          </Button>
-          <Button variant='contained' size='small'>
-            Save
-          </Button>
-        </DialogActions>
-      </Dialog>
+
+        {attendeeList.map((attendee) => (
+          <Card key={attendee.id} style={{ margin: '1rem' }}>
+            <CardContent style={{ textAlign: 'center' }}>
+              <Typography variant='h6'>
+                {attendee.first_name} {attendee.last_name}
+              </Typography>
+              <Typography variant='body1'>{attendee.email}</Typography>
+              <Typography variant='body1'>{attendee.age}</Typography>
+              <Button
+                variant='contained'
+                size='small'
+                onClick={() => handleDeleteAttendee(attendee.id)} // Pass attendee.id to the function
+              >
+                delete
+              </Button>
+            </CardContent>
+          </Card>
+        ))}
+      </StyledCardsWrapper>
     </>
   );
 };

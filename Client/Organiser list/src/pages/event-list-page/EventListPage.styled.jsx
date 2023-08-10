@@ -1,17 +1,8 @@
 import { styled } from 'styled-components';
 
-export const StyledWrapperDiv = styled.div`
-  display: flex;
-  justify-content: space-between;
-  padding: 2rem;
-`;
-
-export const StyledButtonWrapper = styled.div`
-  display: flex;
-  justify-content: center;
-  padding: 1rem;
-`;
-
-export const StyledCards = styled.div`
-  display: flex;
+export const StyledCardsWrapper = styled.div`
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1rem;
+  text-align: center;
 `;
