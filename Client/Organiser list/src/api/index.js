@@ -8,5 +8,3 @@ export const createAttendees = (body) =>
   axios.post(`${baseURL}attendees`, body);
 
 export const deleteAttendee = (id) => axios.delete(`${baseURL}attendees/${id}`);
-
-export const updateAttendee = (id) => axios.put(`${baseURL}attendees/${id}`);

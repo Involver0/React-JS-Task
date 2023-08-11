@@ -21,7 +21,7 @@ const AddAttendeeDialog = () => {
 
   const onDialogClose = () => {
     setisDialogOpen(false);
-    // Reset input fields when closing the dialog
+
     setFirstname('');
     setLastname('');
     setEmail('');
@@ -40,7 +40,6 @@ const AddAttendeeDialog = () => {
       });
       console.log('Attendee added:', response);
 
-      // Close the dialog after a successful post
       onDialogClose();
     } catch (err) {
       console.error('Error adding attendee:', err);

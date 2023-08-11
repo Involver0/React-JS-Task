@@ -10,7 +10,7 @@ export const routes = createBrowserRouter([
     element: <PageTemplate />,
     children: [
       {
-        path: '/',
+        path: '/register',
         element: <RegisterPage />,
       },
       {

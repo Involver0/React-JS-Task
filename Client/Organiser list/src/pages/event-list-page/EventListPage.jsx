@@ -28,7 +28,7 @@ const EventListPage = () => {
     try {
       const response = await deleteAttendee(id);
       console.log(response);
-      // Update the attendeeList after successful deletion
+
       setAttendeeList(attendeeList.filter((attendee) => attendee.id !== id));
     } catch (err) {
       console.log(err);
@@ -54,7 +54,7 @@ const EventListPage = () => {
               <Button
                 variant='contained'
                 size='small'
-                onClick={() => handleDeleteAttendee(attendee.id)} // Pass attendee.id to the function
+                onClick={() => handleDeleteAttendee(attendee.id)}
               >
                 delete
               </Button>
